@@ -1,0 +1,36 @@
+name:                auth0
+version:             0.1.0
+synopsis:            REST client for Auth0
+description:         REST client for Auth0
+homepage:            https://github.com/collegevine/auth0#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Ralph Morton
+maintainer:          ralphmorton@gmail.com
+copyright:           Collegevine
+category:            Web
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Web.Auth0.Types
+                     , Web.Auth0.Authentication
+                     , Web.Auth0.Management
+  other-modules:       Web.Auth0.Common
+  build-depends:       base >= 4.7 && < 5
+                     , mtl >= 2.1.3.1
+                     , time >= 1.5.0.1
+                     , bytestring >= 0.10.6.0
+                     , text >= 1.2.2.1
+                     , containers >= 0.5.6.2
+                     , lens >= 4.13
+                     , aeson >= 0.9.0.1
+                     , http-types >= 0.9
+                     , nano-http >= 0.1.1
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/collegevine/auth0
