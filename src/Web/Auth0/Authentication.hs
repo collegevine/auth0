@@ -14,6 +14,7 @@ import Control.Monad.Trans (MonadIO)
 import Data.Aeson
 import Network.HTTP.Nano
 
+-- |Get a user profile given a valid Auth0 token
 tokenInfo :: (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHttpCfg r, HasAuth0 r) => Token -> m Profile
 tokenInfo tok = do
     url <- (++"tokeninfo") <$> auth0URL

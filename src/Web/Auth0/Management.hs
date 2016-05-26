@@ -15,6 +15,7 @@ import qualified Data.ByteString.Char8 as B
 import Network.HTTP.Nano
 import Network.HTTP.Types.URI (urlEncode)
 
+-- |Search users based on a lucene query into user profile fields
 searchUsers :: (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHttpCfg r, HasAuth0 r) => Query -> m [Profile]
 searchUsers q = do
     let path = "api/v2/users?search_engine=v2&q=" ++ (B.unpack . urlEncode False . B.pack $ show q)

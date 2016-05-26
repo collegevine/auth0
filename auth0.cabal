@@ -1,5 +1,5 @@
 name:                auth0
-version:             0.1.1
+version:             0.2.0
 synopsis:            REST client for Auth0
 description:         REST client for Auth0
 homepage:            https://github.com/collegevine/auth0#readme
@@ -16,6 +16,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Web.Auth0.Types
+                     , Web.Auth0
                      , Web.Auth0.Authentication
                      , Web.Auth0.Management
   other-modules:       Web.Auth0.Common
@@ -25,6 +26,7 @@ library
                      , bytestring >= 0.10.6.0
                      , text >= 1.2.2.1
                      , containers >= 0.5.6.2
+                     , unordered-containers >= 0.2.5.1
                      , lens >= 4.13
                      , aeson >= 0.9.0.1
                      , http-types >= 0.9
