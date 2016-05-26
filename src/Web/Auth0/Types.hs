@@ -26,16 +26,15 @@ data Query where
     (:|) :: Query -> Query -> Query
     QPARENS :: Query -> Query
 
-infixl 9 `QPARENS`
-infixl 8 :&
-infixl 7 :|
+infixl 2 :&
+infixl 3 :|
 
 data Term where
     TEQ :: Show a => a -> Term
     (:<->) :: Show a => a -> a -> Term
 
-infixl 6 `TEQ`
-infixl 5 :<->
+infixl 5 `TEQ`
+infixl 4 :<->
 
 instance Show Query where
     show (k := t) = k ++ ":" ++ show t

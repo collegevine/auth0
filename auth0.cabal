@@ -1,5 +1,5 @@
 name:                auth0
-version:             0.1.0
+version:             0.1.1
 synopsis:            REST client for Auth0
 description:         REST client for Auth0
 homepage:            https://github.com/collegevine/auth0#readme
