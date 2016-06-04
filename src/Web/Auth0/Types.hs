@@ -49,6 +49,11 @@ instance Show Term where
     show (TEQ v) = show v
     show (v1 :<-> v2) = "[" ++ show v1 ++ " TO " ++ show v2 ++ "]"
 
+newtype Unquoted = Unquoted String
+
+instance Show Unquoted where
+    show (Unquoted s) = s
+
 data Profile = Profile {
     _profileID :: String,
     _profileBlocked :: Maybe Bool,
