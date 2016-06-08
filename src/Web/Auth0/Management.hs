@@ -1,7 +1,8 @@
 
 module Web.Auth0.Management(
     module Web.Auth0.Types,
-    searchUsers
+    searchUsers,
+    getUser
 ) where
 
 import Web.Auth0.Types
@@ -20,5 +21,11 @@ searchUsers :: (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHt
 searchUsers q = do
     let path = "api/v2/users?search_engine=v2&q=" ++ (B.unpack . urlEncode False . B.pack $ show q)
     url <- (++path) <$> auth0URL
+    tok <- view auth0Token
+    httpJSON . addHeaders [("Content-Type", "application/json"),("Authorization", "Bearer " ++ tok)] =<< buildReq GET url NoRequestData
+
+getUser :: (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHttpCfg r, HasAuth0 r) => String -> m Profile
+getUser uid = do
+    url <- (++("api/v2/users/"++uid)) <$> auth0URL
     tok <- view auth0Token
     httpJSON . addHeaders [("Content-Type", "application/json"),("Authorization", "Bearer " ++ tok)] =<< buildReq GET url NoRequestData
