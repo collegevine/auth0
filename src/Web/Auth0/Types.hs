@@ -129,7 +129,17 @@ instance FromJSON Identity where
                     <*> v .:? "profileData"
     parseJSON _ = mzero
 
+data AuthToken = AuthToken {
+    _authTokenIDToken :: String,
+    _authTokenAccessToken :: String
+} deriving Show
+
+instance FromJSON AuthToken where
+    parseJSON (Object v) = AuthToken <$> v .: "id_token" <*> v .: "access_token"
+    parseJSON _ = mzero
+
 makeClassy ''Auth0
 makeLenses ''Profile
 makeLenses ''ProfileData
 makeLenses ''Identity
+makeLenses ''AuthToken
