@@ -4,6 +4,7 @@ module Web.Auth0.Management(
     module Web.Auth0.Types,
     searchUsers,
     getUser,
+    createEmailUser,
     setEmail,
     setPhone
 ) where
@@ -29,6 +30,10 @@ searchUsers q = do
 -- |Get a user by ID
 getUser :: (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHttpCfg r, HasAuth0 r) => String -> m Profile
 getUser uid = httpJSON =<< a0Req GET ("api/v2/users/"++uid) NoRequestData
+
+-- |Create an email user
+createEmailUser :: (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHttpCfg r, HasAuth0 r) => NewEmailUser -> m Profile
+createEmailUser dta = httpJSON =<< a0Req POST "api/v2/users" (mkJSONData dta)
 
 -- |Set the email address of a profile
 setEmail :: (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHttpCfg r, HasAuth0 r) => String -> String -> m Profile

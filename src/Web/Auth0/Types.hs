@@ -138,8 +138,37 @@ instance FromJSON AuthToken where
     parseJSON (Object v) = AuthToken <$> v .: "id_token" <*> v .: "access_token"
     parseJSON _ = mzero
 
+data NewEmailUser = NewEmailUser {
+    _newEmailUserConnection :: String,
+    _newEmailUserEmail :: String,
+    _newEmailUserPassword :: String,
+    _newEmailUserName :: String,
+    _newEmailUserNickname :: String
+} deriving Show
+
+instance ToJSON NewEmailUser where
+    toJSON u =
+        object [
+            "connection" .= _newEmailUserConnection u,
+            "email" .= _newEmailUserEmail u,
+            "password" .= _newEmailUserPassword u,
+            "name" .= _newEmailUserName u,
+            "nickname" .= _newEmailUserNickname u,
+            "email_verified" .= True
+        ]
+
+instance FromJSON NewEmailUser where
+    parseJSON (Object v) =
+        NewEmailUser    <$> v .: "connection"
+                        <*> v .: "email"
+                        <*> v .: "password"
+                        <*> v .: "name"
+                        <*> v .: "nickname"
+    parseJSON _ = mzero
+
 makeClassy ''Auth0
 makeLenses ''Profile
 makeLenses ''ProfileData
 makeLenses ''Identity
 makeLenses ''AuthToken
+makeLenses ''NewEmailUser
