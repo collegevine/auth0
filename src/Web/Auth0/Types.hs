@@ -20,7 +20,8 @@ type Token = String
 
 data Auth0 = Auth0 {
     _auth0Application :: String,
-    _auth0Token :: String
+    _auth0Token :: String,
+    _auth0Secret :: String
 }
 
 data Query where
@@ -166,9 +167,29 @@ instance FromJSON NewEmailUser where
                         <*> v .: "nickname"
     parseJSON _ = mzero
 
+data TokenInfo a = TokenInfo {
+    _tokenInfoISS :: String,
+    _tokenInfoSUB :: String,
+    _tokenInfoAUD :: String,
+    _tokenInfoEXP :: Int,
+    _tokenInfoIAT :: Int,
+    _tokenInfoAppMetadata :: Maybe a
+} deriving Show
+
+instance FromJSON a => FromJSON (TokenInfo a) where
+    parseJSON (Object v) =
+        TokenInfo   <$> v .: "iss"
+                    <*> v .: "sub"
+                    <*> v .: "aud"
+                    <*> v .: "exp"
+                    <*> v .: "iat"
+                    <*> v .:? "app_metadata"
+    parseJSON _ = mzero
+
 makeClassy ''Auth0
 makeLenses ''Profile
 makeLenses ''ProfileData
 makeLenses ''Identity
 makeLenses ''AuthToken
 makeLenses ''NewEmailUser
+makeLenses ''TokenInfo
