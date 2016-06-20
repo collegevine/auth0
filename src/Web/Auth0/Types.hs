@@ -55,15 +55,17 @@ newtype Unquoted = Unquoted String
 instance Show Unquoted where
     show (Unquoted s) = s
 
-data Profile = Profile {
+type Profile = Profile' (Maybe (M.Map String Value)) (Maybe (M.Map String Value))
+
+data Profile' a b = Profile' {
     _profileID :: String,
     _profileBlocked :: Maybe Bool,
     _profileCreated :: Maybe UTCTime,
     _profileUpdated :: Maybe UTCTime,
     _profileLastLogin :: Maybe UTCTime,
     _profileIdentities :: [Identity],
-    _profileUserMeta :: Maybe (M.Map String Value),
-    _profileAppMeta :: Maybe (M.Map String Value),
+    _profileUserMeta :: Maybe a,
+    _profileAppMeta :: Maybe b,
     _profileData :: ProfileData
 } deriving Show
 
@@ -86,9 +88,9 @@ data Identity = Identity {
     _identityProfileData :: Maybe ProfileData
 } deriving Show
 
-instance FromJSON Profile where
+instance (FromJSON a, FromJSON b) => FromJSON (Profile' a b) where
     parseJSON (Object v) = do
-        Profile <$> v .: "user_id"
+        Profile' <$> v .: "user_id"
                 <*> v .:? "blocked"
                 <*> from8601 "created_at"
                 <*> from8601 "updated_at"
@@ -187,7 +189,7 @@ instance FromJSON a => FromJSON (TokenInfo a) where
     parseJSON _ = mzero
 
 makeClassy ''Auth0
-makeLenses ''Profile
+makeLenses ''Profile'
 makeLenses ''ProfileData
 makeLenses ''Identity
 makeLenses ''AuthToken

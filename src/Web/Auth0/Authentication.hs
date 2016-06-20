@@ -25,7 +25,7 @@ login clientID connection username password scopes = do
     httpJSON req
 
 -- |Get a user profile given a valid Auth0 token
-tokenInfo :: (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHttpCfg r, HasAuth0 r) => Token -> m Profile
+tokenInfo :: (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHttpCfg r, HasAuth0 r, FromJSON a, FromJSON b) => Token -> m (Profile' a b)
 tokenInfo tok = do
     url <- (++"tokeninfo") <$> auth0URL
     let body = object ["id_token" .= tok]

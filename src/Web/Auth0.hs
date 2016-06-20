@@ -17,7 +17,7 @@ import Control.Lens ((^.))
 import Data.Maybe (catMaybes)
 
 -- |Get all verified emails attached to a profile, or any child profile (via linked accounts)
-getVerifiedEmails :: Profile -> [String]
+getVerifiedEmails :: Profile' a b -> [String]
 getVerifiedEmails prof = catMaybes (email (prof ^. profileData):subs)
     where
     idx = prof ^. profileIdentities
@@ -31,7 +31,7 @@ getVerifiedEmails prof = catMaybes (email (prof ^. profileData):subs)
         email prof
 
 -- |Get all verified phone numbers attached to a profile, or any child profile (via linked accounts)
-getVerifiedPhones :: Profile -> [String]
+getVerifiedPhones :: Profile' a b -> [String]
 getVerifiedPhones prof = catMaybes (phone (prof ^. profileData):subs)
     where
     idx = prof ^. profileIdentities
