@@ -188,6 +188,17 @@ instance FromJSON a => FromJSON (TokenInfo a) where
                     <*> v .:? "app_metadata"
     parseJSON _ = mzero
 
+instance ToJSON a => ToJSON (TokenInfo a) where
+    toJSON i =
+        object [
+            "iss" .= _tokenInfoISS i,
+            "sub" .= _tokenInfoSUB i,
+            "aud" .= _tokenInfoAUD i,
+            "exp" .= _tokenInfoEXP i,
+            "iat" .= _tokenInfoIAT i,
+            "app_metadata" .= _tokenInfoAppMetadata i
+        ]
+
 makeClassy ''Auth0
 makeLenses ''Profile'
 makeLenses ''ProfileData
