@@ -2,21 +2,27 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Web.Auth0.Types where
 
 import Control.Lens.TH
-import Control.Monad (mzero)
+import Control.Monad                        (mzero)
 import Data.Aeson
-import Data.Aeson.Types (Parser)
+import Data.Aeson.Types                     (Parser)
 import qualified Data.ByteString.Lazy.Char8 as BL
-import qualified Data.HashMap.Strict as HM
-import qualified Data.Map as M
-import Data.Text (Text)
-import Data.Time.Clock (UTCTime)
-import Data.Time.Format (defaultTimeLocale, iso8601DateFormat, parseTimeM)
+import qualified Data.HashMap.Strict        as HM
+import qualified Data.Map                   as M
+import Control.Monad.Except                 (MonadError)
+import Control.Monad.Reader                 (MonadReader)
+import Control.Monad.Trans                  (MonadIO)
+import Data.Text                            (Text)
+import Data.Time.Clock                      (UTCTime)
+import Data.Time.Format                     (defaultTimeLocale, iso8601DateFormat, parseTimeM)
+import Network.HTTP.Nano
 
 type Token = String
+type HttpM m r e = (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHttpCfg r)
 
 data Auth0 = Auth0 {
     _auth0Application :: String,
