@@ -50,7 +50,7 @@ setPhone uid phone = do
 
 setAppMetadata :: (Auth0M m r e, ToJSON d, FromJSON a, FromJSON b) => String -> d -> m (Profile' a b)
 setAppMetadata uid metaData = do
-    let dta = mkJSONData $ object [ "app_metadata" .= object ["data" .= toJSON metaData ]] 
+    let dta = mkJSONData $ object [ "app_metadata" .= toJSON metaData ] 
     httpJSON =<< a0Req pATCH ("api/v2/users/"++uid) dta
 
 --
