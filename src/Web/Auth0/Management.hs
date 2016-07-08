@@ -25,8 +25,18 @@ type Auth0M m r e = (HttpM m r e, HasAuth0 r)
 -- |Search users based on a lucene query into user profile fields
 searchUsers :: (Auth0M m r e, FromJSON a, FromJSON b) => Query -> m [Profile' a b]
 searchUsers q = do
-    let path = "api/v2/users?search_engine=v2&q=" ++ (B.unpack . urlEncode False . B.pack $ show q)
-    httpJSON =<< a0Req GET path NoRequestData
+    let path = "api/v2/users?search_engine=v2&per_page=100&q=" ++ (B.unpack . urlEncode False . B.pack $ show q)
+    searchPages path 0
+
+searchPages :: (Auth0M m r e, FromJSON a, FromJSON b) => String -> Int -> m [Profile' a b]
+searchPages bpath page = do
+    let path = bpath ++ "&page=" ++ show page
+    profs <- httpJSON =<< a0Req GET path NoRequestData
+    case profs of
+        [] -> return profs
+        _ -> do
+            profs' <- searchPages bpath (page + 1)
+            return $ profs ++ profs'
 
 -- |Get a user by ID
 getUser :: (Auth0M m r e, FromJSON a, FromJSON b) => String -> m (Profile' a b)
@@ -50,7 +60,7 @@ setPhone uid phone = do
 
 setAppMetadata :: (Auth0M m r e, ToJSON d, FromJSON a, FromJSON b) => String -> d -> m (Profile' a b)
 setAppMetadata uid metaData = do
-    let dta = mkJSONData $ object [ "app_metadata" .= toJSON metaData ] 
+    let dta = mkJSONData $ object [ "app_metadata" .= toJSON metaData ]
     httpJSON =<< a0Req pATCH ("api/v2/users/"++uid) dta
 
 --
