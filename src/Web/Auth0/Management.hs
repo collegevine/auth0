@@ -5,6 +5,7 @@ module Web.Auth0.Management(
     module Web.Auth0.Types,
     searchUsers,
     getUser,
+    blockUser,
     createEmailUser,
     setEmail,
     setPhone,
@@ -45,6 +46,11 @@ getUser uid = httpJSON =<< a0Req GET ("api/v2/users/"++uid) NoRequestData
 -- |Create an email user
 createEmailUser :: (Auth0M m r e, HasAuth0 r, FromJSON a, FromJSON b) => NewEmailUser -> m (Profile' a b)
 createEmailUser dta = httpJSON =<< a0Req POST "api/v2/users" (mkJSONData dta)
+
+-- Set the blocked flag for a user
+blockUser :: (Auth0M m r e, HasAuth0 r, FromJSON a, FromJSON b) => String -> Bool -> m (Profile' a b)
+blockUser userId b= httpJSON =<< a0Req pATCH ("api/v2/users/"++userId) j
+    where j = mkJSONData $ object ["blocked" .= b]
 
 -- |Set the email address of a profile
 setEmail :: (Auth0M m r e, FromJSON a, FromJSON b) => String -> String -> m (Profile' a b)
