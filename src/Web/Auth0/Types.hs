@@ -27,7 +27,8 @@ type HttpM m r e = (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, H
 data Auth0 = Auth0 {
     _auth0Application :: String,
     _auth0Token :: String,
-    _auth0Secret :: String
+    _auth0Secret :: String,
+    _auth0ClientID :: String
 }
 
 data Query where
