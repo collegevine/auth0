@@ -24,8 +24,8 @@ createJWT :: (MonadReader r m, HasAuth0 r, ToJSON a) => TokenInfo a -> m Token
 createJWT inf = do
     secret <- B64.decodeLenient . B.pack <$> view auth0Secret
     let header = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"
-    let payload = B64.encode . BL.toStrict $ encode inf
-    let sig = hmac' secret $ header<>"."<>payload
+    let payload = B.filter (/= '=') . B64.encode . BL.toStrict $ encode inf
+    let sig = hmac' secret $ header<>"."<> payload
     return . B.unpack $ header<>"."<>payload<>"."<>sig
 
 -- |Decode and verify a JWT, decoding app_metadata to the specified type
