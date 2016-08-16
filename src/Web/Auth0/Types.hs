@@ -198,12 +198,12 @@ instance FromJSON a => FromJSON (TokenInfo a) where
 instance ToJSON a => ToJSON (TokenInfo a) where
     toJSON i =
         object [
+            "app_metadata" .= _tokenInfoAppMetadata i,
             "iss" .= _tokenInfoISS i,
             "sub" .= _tokenInfoSUB i,
             "aud" .= _tokenInfoAUD i,
             "exp" .= _tokenInfoEXP i,
-            "iat" .= _tokenInfoIAT i,
-            "app_metadata" .= _tokenInfoAppMetadata i
+            "iat" .= _tokenInfoIAT i
         ]
 
 makeClassy ''Auth0
