@@ -176,6 +176,31 @@ instance FromJSON NewEmailUser where
                         <*> v .: "nickname"
     parseJSON _ = mzero
 
+data NewPhoneUser = NewPhoneUser {
+    _newPhoneUserConnection :: Maybe String,
+    _newPhoneUserPhone :: String,
+    _newPhoneUserName :: Maybe String,
+    _newPhoneUserNickname :: Maybe String
+} deriving Show
+
+instance ToJSON NewPhoneUser where
+    toJSON u =
+        object [
+            "connection" .= _newPhoneUserConnection u,
+            "phone_number" .= _newPhoneUserPhone u,
+            "name" .= _newPhoneUserName u,
+            "nickname" .= _newPhoneUserNickname u,
+            "phone_verified" .= True
+        ]
+
+instance FromJSON NewPhoneUser where
+    parseJSON (Object v) =
+        NewPhoneUser    <$> v .: "connection"
+                        <*> v .: "phone"
+                        <*> v .: "name"
+                        <*> v .: "nickname"
+    parseJSON _ = mzero
+
 data TokenInfo a = TokenInfo {
     _tokenInfoISS :: String,
     _tokenInfoSUB :: String,
@@ -212,4 +237,5 @@ makeLenses ''ProfileData
 makeLenses ''Identity
 makeLenses ''AuthToken
 makeLenses ''NewEmailUser
+makeLenses ''NewPhoneUser
 makeLenses ''TokenInfo

@@ -7,6 +7,7 @@ module Web.Auth0.Management(
     getUser,
     blockUser,
     createEmailUser,
+    createPhoneUser,
     setEmail,
     setPhone,
     setAppMetadata,
@@ -46,6 +47,10 @@ getUser uid = httpJSON =<< a0Req GET ("api/v2/users/"++uid) NoRequestData
 -- |Create an email user
 createEmailUser :: (Auth0M m r e, HasAuth0 r, FromJSON a, FromJSON b) => NewEmailUser -> m (Profile' a b)
 createEmailUser dta = httpJSON =<< a0Req POST "api/v2/users" (mkJSONData dta)
+
+-- |Create a phone user
+createPhoneUser :: (Auth0M m r e, HasAuth0 r, FromJSON a, FromJSON b) => NewPhoneUser -> m (Profile' a b)
+createPhoneUser dta = httpJSON =<< a0Req POST "api/v2/users" (mkJSONData dta)
 
 -- Set the blocked flag for a user
 blockUser :: (Auth0M m r e, HasAuth0 r, FromJSON a, FromJSON b) => String -> Bool -> m (Profile' a b)
