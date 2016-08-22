@@ -11,14 +11,16 @@ module Web.Auth0.Management(
     setEmail,
     setPhone,
     setAppMetadata,
+    linkProfile
 ) where
 
 import Web.Auth0.Types
 import Web.Auth0.Common
 
-import Control.Lens (view)
+import Control.Lens (view, (^.))
 import Data.Aeson
 import qualified Data.ByteString.Char8 as B
+import Data.Maybe (listToMaybe)
 import Network.HTTP.Nano
 import Network.HTTP.Types.URI (urlEncode)
 
@@ -73,6 +75,17 @@ setAppMetadata :: (Auth0M m r e, ToJSON d, FromJSON a, FromJSON b) => String -> 
 setAppMetadata uid metaData = do
     let dta = mkJSONData $ object [ "app_metadata" .= toJSON metaData ]
     httpJSON =<< a0Req pATCH ("api/v2/users/"++uid) dta
+
+linkProfile :: Auth0M m r e => String -> String -> m ()
+linkProfile rootID subID = do
+    sp <- getUser subID
+    let dta = mkJSONData $ object ["provider" .= (maybe "" id $ getProvider sp), "connection_id" .= ("" :: String), "user_id" .= subID]
+    http' =<< a0Req POST ("api/v2/users/" ++ rootID ++ "/identities") dta
+
+getProvider :: Profile' Value Value -> Maybe String
+getProvider p = do
+    ident <- listToMaybe $ p ^. profileIdentities
+    return $ ident ^. identityProvider
 
 --
 -- Utility
