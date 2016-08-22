@@ -79,7 +79,7 @@ setAppMetadata uid metaData = do
 linkProfile :: Auth0M m r e => String -> String -> m ()
 linkProfile rootID subID = do
     sp <- getUser subID
-    let dta = mkJSONData $ object ["provider" .= (maybe "" id $ getProvider sp), "connection_id" .= ("" :: String), "user_id" .= subID]
+    let dta = mkJSONData $ object ["provider" .= (maybe "" id $ getProvider sp), "user_id" .= subID]
     http' =<< a0Req POST ("api/v2/users/" ++ rootID ++ "/identities") dta
 
 getProvider :: Profile' Value Value -> Maybe String
