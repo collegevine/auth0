@@ -5,6 +5,7 @@ module Web.Auth0.Management(
     module Web.Auth0.Types,
     searchUsers,
     getUser,
+    deleteUser,
     blockUser,
     createEmailUser,
     createPhoneUser,
@@ -45,6 +46,10 @@ searchPages bpath page = do
 -- |Get a user by ID
 getUser :: (Auth0M m r e, FromJSON a, FromJSON b) => String -> m (Profile' a b)
 getUser uid = httpJSON =<< a0Req GET ("api/v2/users/"++uid) NoRequestData
+
+-- |Delete a user
+deleteUser :: Auth0M m r e => String -> m ()
+deleteUser uid = http' =<< a0Req DELETE ("api/v2/users/"++uid) NoRequestData
 
 -- |Create an email user
 createEmailUser :: (Auth0M m r e, HasAuth0 r, FromJSON a, FromJSON b) => NewEmailUser -> m (Profile' a b)
