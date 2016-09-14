@@ -9,6 +9,7 @@ module Web.Auth0.Management(
     blockUser,
     createEmailUser,
     createPhoneUser,
+    updateUserFrom,
     setEmail,
     setPhone,
     setAppMetadata,
@@ -58,6 +59,25 @@ createEmailUser dta = httpJSON =<< a0Req POST "api/v2/users" (mkJSONData dta)
 -- |Create a phone user
 createPhoneUser :: (Auth0M m r e, HasAuth0 r, FromJSON a, FromJSON b) => NewPhoneUser -> m (Profile' a b)
 createPhoneUser dta = httpJSON =<< a0Req POST "api/v2/users" (mkJSONData dta)
+
+-- | Copy as much data fields from given 'Profile' as possible and update
+-- user specified by provided ID with it.
+
+updateUserFrom :: (Auth0M m r e, HasAuth0 r)
+    => String          -- ^ ID of user to update
+    -> Profile         -- ^ Where to get data from
+    -> m ()
+updateUserFrom uid profile = do
+    let val = object
+            [ "blocked"        .= view profileBlocked profile
+            , "email_verified" .= view (profileData . profileEmailVerified) profile
+            , "email"          .= view (profileData . profileEmail) profile
+            , "phone_number"   .= view (profileData . profilePhoneNumber) profile
+            , "phone_verified" .= view (profileData . profilePhoneNumberVerified) profile
+            , "user_metadata"  .= view profileUserMeta profile
+            , "app_metadata"   .= view profileAppMeta profile
+            , "username"       .= view (profileData . profileUsername) profile ]
+    http' =<< a0Req PATCH ("api/v2/users/" ++ uid) (mkJSONData val)
 
 -- Set the blocked flag for a user
 blockUser :: (Auth0M m r e, HasAuth0 r, FromJSON a, FromJSON b) => String -> Bool -> m (Profile' a b)

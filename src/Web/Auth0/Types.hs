@@ -86,7 +86,7 @@ renderQueryUrlEncoded :: Query -> ByteString
 renderQueryUrlEncoded =
     urlEncode False . B.toStrict . B.toLazyByteString . buildQuery
 
-type Profile = Profile' (Maybe (M.Map String Value)) (Maybe (M.Map String Value))
+type Profile = Profile' (M.Map String Value) (M.Map String Value)
 
 data Profile' a b = Profile' {
     _profileID :: String,
