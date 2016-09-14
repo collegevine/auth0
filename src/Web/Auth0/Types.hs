@@ -1,25 +1,29 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ConstraintKinds   #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs             #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Web.Auth0.Types where
 
 import Control.Lens.TH
-import Control.Monad                        (mzero)
+import Control.Monad (mzero)
+import Control.Monad.Except (MonadError)
+import Control.Monad.Reader (MonadReader)
+import Control.Monad.Trans (MonadIO)
 import Data.Aeson
-import Data.Aeson.Types                     (Parser)
-import qualified Data.ByteString.Lazy.Char8 as BL
-import qualified Data.HashMap.Strict        as HM
-import qualified Data.Map                   as M
-import Control.Monad.Except                 (MonadError)
-import Control.Monad.Reader                 (MonadReader)
-import Control.Monad.Trans                  (MonadIO)
-import Data.Text                            (Text)
-import Data.Time.Clock                      (UTCTime)
-import Data.Time.Format                     (defaultTimeLocale, iso8601DateFormat, parseTimeM)
+import Data.Aeson.Types (Parser)
+import Data.ByteString (ByteString)
+import Data.Monoid ((<>))
+import Data.Text (Text)
+import Data.Time.Clock (UTCTime)
+import Data.Time.Format (defaultTimeLocale, iso8601DateFormat, parseTimeM)
 import Network.HTTP.Nano
+import Network.HTTP.Types.URI (urlEncode)
+import qualified Data.ByteString.Lazy as B
+import qualified Data.ByteString.Builder as B
+import qualified Data.HashMap.Strict as HM
+import qualified Data.Map as M
 
 type Token = String
 type HttpM m r e = (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHttpCfg r)
@@ -35,32 +39,52 @@ data Query where
     (:=) :: String -> Term -> Query
     (:&) :: Query -> Query -> Query
     (:|) :: Query -> Query -> Query
-    QPARENS :: Query -> Query
 
 infixl 2 :&
 infixl 3 :|
 
 data Term where
-    TEQ :: Show a => a -> Term
-    (:<->) :: Show a => a -> a -> Term
+    TEQ :: IsTerm a => a -> Term
+    (:<->) :: IsTerm a => a -> a -> Term
+
+newtype Unquoted a = Unquoted a
+
+class IsTerm a where
+    renderTerm :: a -> B.Builder
+
+instance IsTerm Int where
+    renderTerm = B.intDec
+
+instance IsTerm Float where
+    renderTerm = B.floatDec
+
+instance IsTerm Double where
+    renderTerm = B.doubleDec
+
+instance IsTerm [Char] where
+    renderTerm x = "\"" <> B.stringUtf8 x <> "\""
+
+instance IsTerm (Unquoted [Char]) where
+    renderTerm (Unquoted x) = B.stringUtf8 x
+
+buildTerm :: Term -> B.Builder
+buildTerm (TEQ x) = renderTerm x
+buildTerm (x :<-> y) = "[" <> renderTerm x <> " TO " <> renderTerm y <> "]"
 
 infixl 5 `TEQ`
 infixl 4 :<->
 
-instance Show Query where
-    show (k := t) = k ++ ":" ++ show t
-    show (q1 :& q2) = show q1 ++ " AND " ++ show q2
-    show (q1 :| q2) = show q1 ++ " OR " ++ show q2
-    show (QPARENS q) = "(" ++ show q ++ ")"
+buildQuery :: Query -> B.Builder
+buildQuery (k := t) = B.stringUtf8 k <> ":" <> buildTerm t
+buildQuery (q1 :& q2) = "(" <> buildQuery q1 <> ") AND (" <> buildQuery q2 <> ")"
+buildQuery (q1 :| q2) = "(" <> buildQuery q1 <> ") OR ("  <> buildQuery q2 <> ")"
 
-instance Show Term where
-    show (TEQ v) = show v
-    show (v1 :<-> v2) = "[" ++ show v1 ++ " TO " ++ show v2 ++ "]"
+-- | Render and URL encode a 'Query'. This function supports Unicode in
+-- 'Term's.
 
-newtype Unquoted = Unquoted String
-
-instance Show Unquoted where
-    show (Unquoted s) = s
+renderQueryUrlEncoded :: Query -> ByteString
+renderQueryUrlEncoded =
+    urlEncode False . B.toStrict . B.toLazyByteString . buildQuery
 
 type Profile = Profile' (Maybe (M.Map String Value)) (Maybe (M.Map String Value))
 
@@ -96,7 +120,7 @@ data Identity = Identity {
 } deriving Show
 
 instance (FromJSON a, FromJSON b) => FromJSON (Profile' a b) where
-    parseJSON (Object v) = do
+    parseJSON (Object v) =
         Profile' <$> v .: "user_id"
                 <*> v .:? "blocked"
                 <*> from8601 "created_at"

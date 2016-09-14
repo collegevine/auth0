@@ -1,4 +1,3 @@
-
 module Web.Auth0.Common(
     auth0URL
 ) where
