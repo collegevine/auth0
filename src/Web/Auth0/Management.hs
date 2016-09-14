@@ -19,9 +19,9 @@ module Web.Auth0.Management(
 import Web.Auth0.Types
 import Web.Auth0.Common
 
-import Control.Lens (view, (^.))
+import Control.Lens (view)
 import Data.Aeson
-import Data.Maybe (listToMaybe, fromMaybe, maybeToList)
+import Data.Maybe (maybeToList)
 import Data.Monoid ((<>))
 import Network.HTTP.Nano
 import qualified Data.ByteString.Char8 as B
@@ -103,18 +103,18 @@ setAppMetadata uid metaData = do
     let dta = mkJSONData $ object [ "app_metadata" .= toJSON metaData ]
     httpJSON =<< a0Req PATCH ("api/v2/users/"++uid) dta
 
-linkProfile :: Auth0M m r e => String -> String -> m ()
-linkProfile rootID subID = do
-    sp <- getUser subID
-    let dta = mkJSONData $ object
-          [ "provider" .= fromMaybe "" (getProvider sp)
-          , "user_id" .= subID ]
-    http' =<< a0Req POST ("api/v2/users/" ++ rootID ++ "/identities") dta
-
-getProvider :: Profile' Value Value -> Maybe String
-getProvider p = do
-    ident <- listToMaybe $ p ^. profileIdentities
-    return $ ident ^. identityProvider
+linkProfile :: Auth0M m r e
+    => String          -- ^ Provider (Twitter, Google, etc.)
+    -> String          -- ^ Profile id to link with
+    -> String          -- ^ User ID to link
+    -> m ()
+linkProfile provider rootID subID = do
+    let val = object
+          [ "provider"      .=  provider
+          , "connection_id" .= ("" :: String)
+          , "user_id"       .= subID
+          , "link_with"     .= rootID ]
+    http' =<< a0Req POST ("api/v2/users/" ++ rootID ++ "/identities") (mkJSONData val)
 
 --
 -- Utility
