@@ -32,13 +32,13 @@ createJWT inf = do
 decodeJWT :: (MonadReader r m, HasAuth0 r, FromJSON a) => Token -> m (Maybe (TokenInfo a))
 decodeJWT tok = do
     secret <- B64.decodeLenient . B.pack <$> view auth0Secret
-    case (T.splitOn "." $ T.pack tok) of
+    case T.splitOn "." (T.pack tok) of
         [header,body,sig] -> return $ do
             let sig' = T.pack . B.unpack . hmac' secret . B.pack $ T.unpack (header<>"."<>body)
-            case (sig' == sig) of
-                True -> decode (BL.fromStrict . B64.decodeLenient . B.pack $ T.unpack body)
-                False -> Nothing
-        otherwise -> return Nothing
+            if sig' == sig
+              then decode (BL.fromStrict . B64.decodeLenient . B.pack $ T.unpack body)
+              else Nothing
+        _ -> return Nothing
 
 hmac' :: B.ByteString -> B.ByteString -> B.ByteString
 hmac' key message = B.takeWhile (/='=') . B64.encode . fst . B16.decode . B.pack . show $ hmacGetDigest (hmac key message :: HMAC SHA256)

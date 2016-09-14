@@ -20,17 +20,17 @@ import Web.Auth0.Common
 
 import Control.Lens (view, (^.))
 import Data.Aeson
-import qualified Data.ByteString.Char8 as B
-import Data.Maybe (listToMaybe)
+import Data.Maybe (listToMaybe, fromMaybe)
 import Network.HTTP.Nano
-import Network.HTTP.Types.URI (urlEncode)
+import qualified Data.ByteString.Char8 as B
 
 type Auth0M m r e = (HttpM m r e, HasAuth0 r)
 
 -- |Search users based on a lucene query into user profile fields
 searchUsers :: (Auth0M m r e, FromJSON a, FromJSON b) => Query -> m [Profile' a b]
-searchUsers q = do
-    let path = "api/v2/users?search_engine=v2&per_page=100&q=" ++ (B.unpack . urlEncode False . B.pack $ show q)
+searchUsers query = do
+    let q    = B.unpack (renderQueryUrlEncoded query)
+        path = "api/v2/users?search_engine=v2&per_page=100&q=" ++ q
     searchPages path 0
 
 searchPages :: (Auth0M m r e, FromJSON a, FromJSON b) => String -> Int -> m [Profile' a b]
@@ -61,30 +61,32 @@ createPhoneUser dta = httpJSON =<< a0Req POST "api/v2/users" (mkJSONData dta)
 
 -- Set the blocked flag for a user
 blockUser :: (Auth0M m r e, HasAuth0 r, FromJSON a, FromJSON b) => String -> Bool -> m (Profile' a b)
-blockUser userId b= httpJSON =<< a0Req pATCH ("api/v2/users/"++userId) j
+blockUser userId b= httpJSON =<< a0Req PATCH ("api/v2/users/"++userId) j
     where j = mkJSONData $ object ["blocked" .= b]
 
 -- |Set the email address of a profile
 setEmail :: (Auth0M m r e, FromJSON a, FromJSON b) => String -> String -> m (Profile' a b)
 setEmail uid email = do
     let dta = mkJSONData $ object ["email" .= email, "verify_email" .= False, "email_verified" .= True]
-    httpJSON =<< a0Req pATCH ("api/v2/users/"++uid) dta
+    httpJSON =<< a0Req PATCH ("api/v2/users/"++uid) dta
 
 -- |Set the phone number of a profile
 setPhone :: (Auth0M m r e, FromJSON a, FromJSON b) => String -> String -> m (Profile' a b)
 setPhone uid phone = do
     let dta = mkJSONData $ object ["phone_number" .= phone, "verify_phone_number" .= False, "phone_verified" .= True]
-    httpJSON =<< a0Req pATCH ("api/v2/users/"++uid) dta
+    httpJSON =<< a0Req PATCH ("api/v2/users/"++uid) dta
 
 setAppMetadata :: (Auth0M m r e, ToJSON d, FromJSON a, FromJSON b) => String -> d -> m (Profile' a b)
 setAppMetadata uid metaData = do
     let dta = mkJSONData $ object [ "app_metadata" .= toJSON metaData ]
-    httpJSON =<< a0Req pATCH ("api/v2/users/"++uid) dta
+    httpJSON =<< a0Req PATCH ("api/v2/users/"++uid) dta
 
 linkProfile :: Auth0M m r e => String -> String -> m ()
 linkProfile rootID subID = do
     sp <- getUser subID
-    let dta = mkJSONData $ object ["provider" .= (maybe "" id $ getProvider sp), "user_id" .= subID]
+    let dta = mkJSONData $ object
+          [ "provider" .= fromMaybe "" (getProvider sp)
+          , "user_id" .= subID ]
     http' =<< a0Req POST ("api/v2/users/" ++ rootID ++ "/identities") dta
 
 getProvider :: Profile' Value Value -> Maybe String
@@ -101,5 +103,3 @@ a0Req mthd path dta = do
     url <- (++path) <$> auth0URL
     tok <- view auth0Token
     addHeaders [("Content-Type", "application/json"),("Authorization", "Bearer " ++ tok)] <$> buildReq mthd url dta
-
-pATCH = CustomMethod "PATCH"
