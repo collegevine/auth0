@@ -111,9 +111,7 @@ linkProfile :: Auth0M m r e
 linkProfile provider rootID subID = do
     let val = object
           [ "provider"      .=  provider
-          , "connection_id" .= ("" :: String)
-          , "user_id"       .= subID
-          , "link_with"     .= rootID ]
+          , "user_id"       .= subID ]
     http' =<< a0Req POST ("api/v2/users/" ++ rootID ++ "/identities") (mkJSONData val)
 
 --
