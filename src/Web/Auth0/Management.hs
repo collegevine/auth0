@@ -21,7 +21,8 @@ import Web.Auth0.Common
 
 import Control.Lens (view, (^.))
 import Data.Aeson
-import Data.Maybe (listToMaybe, fromMaybe)
+import Data.Maybe (listToMaybe, fromMaybe, maybeToList)
+import Data.Monoid ((<>))
 import Network.HTTP.Nano
 import qualified Data.ByteString.Char8 as B
 
@@ -68,15 +69,16 @@ updateUserFrom :: (Auth0M m r e, HasAuth0 r)
     -> Profile         -- ^ Where to get data from
     -> m ()
 updateUserFrom uid profile = do
-    let val = object
-            [ "blocked"        .= view profileBlocked profile
-            , "email_verified" .= view (profileData . profileEmailVerified) profile
-            , "email"          .= view (profileData . profileEmail) profile
-            , "phone_number"   .= view (profileData . profilePhoneNumber) profile
-            , "phone_verified" .= view (profileData . profilePhoneNumberVerified) profile
-            , "user_metadata"  .= view profileUserMeta profile
-            , "app_metadata"   .= view profileAppMeta profile
-            , "username"       .= view (profileData . profileUsername) profile ]
+    let val = object $
+            m "blocked"        (view profileBlocked profile) <>
+            m "email_verified" (view (profileData . profileEmailVerified) profile) <>
+            m "email"          (view (profileData . profileEmail) profile) <>
+            m "phone_number"   (view (profileData . profilePhoneNumber) profile) <>
+            m "phone_verified" (view (profileData . profilePhoneNumberVerified) profile) <>
+            m "user_metadata"  (view profileUserMeta profile) <>
+            m "app_metadata"   (view profileAppMeta profile) <>
+            m "username"       (view (profileData . profileUsername) profile)
+        m k v = maybeToList ((k .=) <$> v)
     http' =<< a0Req PATCH ("api/v2/users/" ++ uid) (mkJSONData val)
 
 -- Set the blocked flag for a user
