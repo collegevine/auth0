@@ -20,10 +20,11 @@ import Data.Time.Clock (UTCTime)
 import Data.Time.Format (defaultTimeLocale, iso8601DateFormat, parseTimeM)
 import Network.HTTP.Nano
 import Network.HTTP.Types.URI (urlEncode)
-import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Builder as B
-import qualified Data.HashMap.Strict as HM
-import qualified Data.Map as M
+import qualified Data.ByteString.Lazy    as B
+import qualified Data.HashMap.Strict     as HM
+import qualified Data.Map                as M
+import qualified Data.Text.Encoding      as T
 
 type Token = String
 type HttpM m r e = (MonadIO m, MonadError e m, MonadReader r m, AsHttpError e, HasHttpCfg r)
@@ -71,6 +72,39 @@ buildTerm :: Term -> B.Builder
 buildTerm (TEQ x) = renderTerm x
 buildTerm (x :<-> y) = "[" <> renderTerm x <> " TO " <> renderTerm y <> "]"
 
+instance ToJSON Query where
+    toJSON (k := t) = object ["op" .= ("=" :: String), "k" .= k, "t" .= t]
+    toJSON (a :& b) = object ["op" .= ("&" :: String), "a" .= a, "b" .= b]
+    toJSON (a :| b) = object ["op" .= ("|" :: String), "a" .= a, "b" .= b]
+
+instance FromJSON Query where
+    parseJSON = withObject "Query" $ \o -> do
+        op <- o .: "op" :: Parser String
+        case op of
+            "=" -> (:=) <$> o .: "k" <*> o .: "t"
+            "&" -> (:&) <$> o .: "a" <*> o .: "b"
+            "|" -> (:|) <$> o .: "a" <*> o .: "b"
+            _ -> fail "ran into an unknown operator"
+
+instance ToJSON Term where
+    toJSON (TEQ v) = object
+        [ "op" .= ("=" :: String)
+        , "v" .= renderTermAsText v]
+    toJSON (f :<-> t) = object
+        [ "op" .= ("<->" :: String)
+        , "f" .= renderTermAsText f
+        , "t" .= renderTermAsText t ]
+
+instance FromJSON Term where
+    parseJSON = withObject "Term" $ \o -> do
+        op <- o .: "op" :: Parser String
+        let u :: String -> Unquoted String
+            u = Unquoted
+        case op of
+            "="   -> TEQ . u <$> ((o .: "v") :: Parser String)
+            "<->" -> (:<->)  <$> (u <$> o .: "f") <*> (u <$> o .: "t")
+            _     -> mzero
+
 infixl 5 `TEQ`
 infixl 4 :<->
 
@@ -78,6 +112,9 @@ buildQuery :: Query -> B.Builder
 buildQuery (k := t) = B.stringUtf8 k <> ":" <> buildTerm t
 buildQuery (q1 :& q2) = "(" <> buildQuery q1 <> ") AND (" <> buildQuery q2 <> ")"
 buildQuery (q1 :| q2) = "(" <> buildQuery q1 <> ") OR ("  <> buildQuery q2 <> ")"
+
+renderTermAsText :: IsTerm a => a -> Text
+renderTermAsText = T.decodeUtf8 . B.toStrict . B.toLazyByteString . renderTerm
 
 -- | Render and URL encode a 'Query'. This function supports Unicode in
 -- 'Term's.
