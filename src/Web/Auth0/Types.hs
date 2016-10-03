@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs             #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
 module Web.Auth0.Types where
@@ -149,7 +150,7 @@ data ProfileData = ProfileData {
 } deriving Show
 
 data Identity = Identity {
-    _identityConnection :: String,
+    _identityConnection :: Maybe String,
     _identityIsSocial :: Bool,
     _identityProvider :: String,
     _identityUserID :: String,
@@ -192,13 +193,13 @@ parseProfileData v =
                 <*> v .:? "picture"
 
 instance FromJSON Identity where
-    parseJSON (Object v) =
-        Identity    <$> v .: "connection"
-                    <*> v .: "isSocial"
-                    <*> v .: "provider"
-                    <*> v .: "user_id"
-                    <*> v .:? "profileData"
-    parseJSON _ = mzero
+    parseJSON = withObject "user Identity" $ \o -> do
+        _identityConnection  <- o .:? "connection"
+        _identityIsSocial    <- o .: "isSocial"
+        _identityProvider    <- o .: "provider"
+        _identityUserID      <- o .: "user_id"
+        _identityProfileData <- o .:? "profileData"
+        return Identity {..}
 
 data AuthToken = AuthToken {
     _authTokenIDToken :: String,
