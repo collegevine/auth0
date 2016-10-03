@@ -151,7 +151,7 @@ data ProfileData = ProfileData {
 
 data Identity = Identity {
     _identityConnection :: Maybe String,
-    _identityIsSocial :: Bool,
+    _identityIsSocial :: Maybe Bool,
     _identityProvider :: String,
     _identityUserID :: String,
     _identityProfileData :: Maybe ProfileData
@@ -195,7 +195,7 @@ parseProfileData v =
 instance FromJSON Identity where
     parseJSON = withObject "user Identity" $ \o -> do
         _identityConnection  <- o .:? "connection"
-        _identityIsSocial    <- o .: "isSocial"
+        _identityIsSocial    <- o .:? "isSocial"
         _identityProvider    <- o .: "provider"
         _identityUserID      <- o .: "user_id"
         _identityProfileData <- o .:? "profileData"
