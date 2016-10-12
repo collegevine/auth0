@@ -1,9 +1,11 @@
-
 module Web.Auth0(
+
     module Web.Auth0.Types,
     module Web.Auth0.Authentication,
     module Web.Auth0.Management,
     module Web.Auth0.JWT,
+    module Web.Auth0.Stats,
+
     getVerifiedEmails,
     getVerifiedPhones
 ) where
@@ -12,6 +14,7 @@ import Web.Auth0.Types
 import Web.Auth0.Authentication
 import Web.Auth0.Management
 import Web.Auth0.JWT
+import Web.Auth0.Stats
 
 import Control.Lens ((^.))
 import Data.Maybe (catMaybes)
