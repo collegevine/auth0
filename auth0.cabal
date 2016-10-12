@@ -15,11 +15,12 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Web.Auth0.Types
-                     , Web.Auth0
+  exposed-modules:     Web.Auth0
                      , Web.Auth0.Authentication
-                     , Web.Auth0.Management
                      , Web.Auth0.JWT
+                     , Web.Auth0.Management
+                     , Web.Auth0.Stats
+                     , Web.Auth0.Types
   other-modules:       Web.Auth0.Common
   build-depends:       base >= 4.7 && < 5
                      , mtl >= 2.1.3.1

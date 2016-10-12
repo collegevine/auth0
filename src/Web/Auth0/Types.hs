@@ -17,8 +17,7 @@ import Data.Aeson.Types (Parser)
 import Data.ByteString (ByteString)
 import Data.Monoid ((<>))
 import Data.Text (Text)
-import Data.Time.Clock (UTCTime)
-import Data.Time.Format (defaultTimeLocale, iso8601DateFormat, parseTimeM)
+import Data.Time
 import Network.HTTP.Nano
 import Network.HTTP.Types.URI (urlEncode)
 import qualified Data.ByteString.Builder as B
@@ -283,6 +282,19 @@ instance ToJSON a => ToJSON (TokenInfo a) where
             "iat" .= _tokenInfoIAT i
         ]
 
+-- | Record representing daily statistics as returned by Auth0 service.
+
+data DailyStats = DailyStats
+    { _dailyStatsDate   :: Day -- ^ Date
+    , _dailyStatsLogins :: Int -- ^ Number of logins
+    } deriving (Show, Eq)
+
+instance FromJSON DailyStats where
+    parseJSON = withObject "DailyStats" $ \o -> do
+        _dailyStatsDate   <- utctDay <$> (o .: "date")
+        _dailyStatsLogins <- o .: "logins"
+        return DailyStats {..}
+
 makeClassy ''Auth0
 makeLenses ''Profile'
 makeLenses ''ProfileData
@@ -290,4 +302,5 @@ makeLenses ''Identity
 makeLenses ''AuthToken
 makeLenses ''NewEmailUser
 makeLenses ''NewPhoneUser
+makeLenses ''DailyStats
 makeLenses ''TokenInfo

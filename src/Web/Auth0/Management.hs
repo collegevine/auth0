@@ -113,13 +113,3 @@ linkProfile provider rootID subID = do
           [ "provider"      .=  provider
           , "user_id"       .= subID ]
     http' =<< a0Req POST ("api/v2/users/" ++ rootID ++ "/identities") (mkJSONData val)
-
---
--- Utility
---
-
-a0Req :: Auth0M m r e => HttpMethod -> String -> RequestData -> m Request
-a0Req mthd path dta = do
-    url <- (++path) <$> auth0URL
-    tok <- view auth0Token
-    addHeaders [("Content-Type", "application/json"),("Authorization", "Bearer " ++ tok)] <$> buildReq mthd url dta
