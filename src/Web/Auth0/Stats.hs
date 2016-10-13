@@ -25,5 +25,5 @@ getDailyStats :: (HttpM m r e, HasAuth0 r)
 getDailyStats from to = do
     let f :: Day -> String
         f = formatTime defaultTimeLocale "%0Y%m%d"
-        path = "api/v2/stats/daily?form=" <> f from <> "&to=" <> f to
+        path = "api/v2/stats/daily?from=" <> f from <> "&to=" <> f to
     httpJSON =<< a0Req GET path NoRequestData
