@@ -245,7 +245,8 @@ instance ToJSON NewPhoneUser where
     toJSON u =
         object [
             "connection" .= ("sms" :: String),
-            "phone_number" .= _newPhoneUserPhone u
+            "phone_number" .= _newPhoneUserPhone u,
+            "phone_verified" .= True
         ]
 
 instance FromJSON NewPhoneUser where
