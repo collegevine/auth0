@@ -69,6 +69,7 @@ updateUserFrom :: (Auth0M m r e, HasAuth0 r)
     -> Profile         -- ^ Where to get data from
     -> m ()
 updateUserFrom uid profile = do
+    clientID <- view auth0ClientID
     let val = object $
             m "blocked"        (view profileBlocked profile) <>
             m "email_verified" (view (profileData . profileEmailVerified) profile) <>
@@ -77,7 +78,8 @@ updateUserFrom uid profile = do
             m "phone_verified" (view (profileData . profilePhoneNumberVerified) profile) <>
             m "user_metadata"  (view profileUserMeta profile) <>
             m "app_metadata"   (view profileAppMeta profile) <>
-            m "username"       (view (profileData . profileUsername) profile)
+            m "username"       (view (profileData . profileUsername) profile) <>
+            m "client_id" (Just clientID)
         m k v = maybeToList ((k .=) <$> v)
     http' =<< a0Req PATCH ("api/v2/users/" ++ uid) (mkJSONData val)
 
