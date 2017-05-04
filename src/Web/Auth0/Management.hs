@@ -29,10 +29,10 @@ import qualified Data.ByteString.Char8 as B
 type Auth0M m r e = (HttpM m r e, HasAuth0 r)
 
 -- |Search users based on a lucene query into user profile fields
-searchUsers :: (Auth0M m r e, FromJSON a, FromJSON b) => Query -> m [Profile' a b]
-searchUsers query = do
-    let q    = B.unpack (renderQueryUrlEncoded query)
-        path = "api/v2/users?search_engine=v2&per_page=100&q=" ++ q
+searchUsers :: (Auth0M m r e, FromJSON a, FromJSON b) => Maybe Query -> m [Profile' a b]
+searchUsers mQuery = do
+    let q    = fmap (B.unpack . renderQueryUrlEncoded) mQuery
+        path = "api/v2/users?search_engine=v2&per_page=100" ++ maybe "" ("&q=" ++) q
     searchPages path 0
 
 searchPages :: (Auth0M m r e, FromJSON a, FromJSON b) => String -> Int -> m [Profile' a b]
